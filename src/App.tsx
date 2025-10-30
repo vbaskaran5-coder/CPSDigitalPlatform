@@ -256,7 +256,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Navigate to="/signin" replace />} />
       {/* --- Migration Tool Route --- */}
       <Route path="/migrate" element={<MigrationRunner />} />
       {/* --- Business Panel Routes --- */}
@@ -315,6 +315,7 @@ function App() {
         {/* RM view of bookings */}
       </Route>
       {/* --- Digital Logsheet Routes --- */}
+      <Route path="/signin" element={<SignIn />} />
       <Route path="/logsheet/signin" element={<SignIn />} />
       <Route
         path="/logsheet"

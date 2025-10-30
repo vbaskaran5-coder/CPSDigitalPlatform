@@ -1,38 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Lock } from 'lucide-react';
-import { format } from 'date-fns';
-import { getCurrentDate } from '../lib/date';
-import { WorkerService } from '../services/database.service';
 import { AuthService } from '../services/auth.service';
-import { Worker } from '../types';
 
 const SignIn: React.FC = () => {
   const [contractorNumber, setContractorNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [availableWorkers, setAvailableWorkers] = useState<Worker[]>([]);
   const navigate = useNavigate();
-
-  const today = format(getCurrentDate(), 'yyyy-MM-dd');
-
-  useEffect(() => {
-    loadAvailableWorkers();
-  }, []);
-
-  const loadAvailableWorkers = async () => {
-    try {
-      const workers = await WorkerService.getAll();
-      const showed = workers.filter(
-        (w) => w.showed && w.showedDate === today
-      );
-      setAvailableWorkers(showed);
-    } catch (error) {
-      console.error('Failed to load available workers:', error);
-      setError('Failed to load workers. Please try again.');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,33 +21,12 @@ const SignIn: React.FC = () => {
     setError('');
 
     try {
-      const worker = availableWorkers.find(
-        (w) => w.contractorId === contractorNumber
-      );
-
-      if (!worker) {
-        throw new Error(
-          'Invalid contractor number or not available for today.'
-        );
-      }
-
-      if (password.toLowerCase() !== worker.firstName.toLowerCase()) {
-        throw new Error('Invalid password.');
-      }
-
-      const sessionType = worker.cartId ? 'cart_worker' : 'contractor';
-      await AuthService.loginWorker(
-        worker.contractorId,
-        worker,
-        sessionType,
-        worker.cartId || undefined
-      );
-
+      await AuthService.loginWorker(contractorNumber, password);
       navigate('/logsheet');
     } catch (err) {
       console.error('Error during login:', err);
       setError(
-        err instanceof Error ? err.message : 'An unexpected error occurred.'
+        err instanceof Error ? err.message : 'Invalid Worker ID or Password'
       );
     } finally {
       setLoading(false);
@@ -146,7 +101,7 @@ const SignIn: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading || availableWorkers.length === 0}
+              disabled={loading}
               className="w-full bg-cps-red text-white py-2 px-4 rounded-md hover:bg-[#dc2f3d] transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}

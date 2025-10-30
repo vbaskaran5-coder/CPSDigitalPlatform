@@ -1,5 +1,5 @@
 import { ConsoleProfile, RouteManagerProfile } from '../types';
-import { ConsoleProfileService, RouteManagerService } from './database.service';
+import { ConsoleProfileService, RouteManagerService, WorkerService } from './database.service';
 import { supabase } from '../lib/supabase';
 
 export type UserType = 'console' | 'route_manager' | 'business_panel' | 'worker';
@@ -115,17 +115,29 @@ export class AuthService {
     }
   }
 
-  static async loginWorker(workerId: string, workerData: any, sessionType: 'contractor' | 'cart_worker', cartId?: number): Promise<AuthSession> {
+  static async loginWorker(workerId: string, password: string): Promise<AuthSession> {
     try {
       const { WorkerSessionService } = await import('./database.service');
 
-      const sessionId = await WorkerSessionService.create(workerId, sessionType, cartId, workerData);
+      const worker = await WorkerService.getById(workerId);
+
+      if (!worker || worker.password !== password) {
+        throw new Error('Invalid Worker ID or Password');
+      }
+
+      const sessionType = worker.cartId ? 'cart_worker' : 'contractor';
+      const sessionId = await WorkerSessionService.create(
+        workerId,
+        sessionType,
+        worker.cartId,
+        worker
+      );
 
       const session: AuthSession = {
         userType: 'worker',
         userId: workerId,
         username: workerId,
-        profile: { ...workerData, sessionId, sessionType, cartId },
+        profile: { ...worker, sessionId, sessionType },
       };
 
       await this.saveSession(session);
