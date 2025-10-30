@@ -43,10 +43,8 @@ const Workerbook: React.FC = () => {
   const [attendanceFinalized, setAttendanceFinalized] =
     useState<boolean>(false);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
-  const [carts, setCarts] = useState<Cart[]>(() => {
-    return getStorageItem(STORAGE_KEYS.CONSOLE_CARTS, []);
-  });
-  const [cartCount, setCartCount] = useState(carts.length);
+  const [carts, setCarts] = useState<Cart[]>([]);
+  const [cartCount, setCartCount] = useState(0);
   const [showRebookModal, setShowRebookModal] = useState(false);
   const [workerToRebook, setWorkerToRebook] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());

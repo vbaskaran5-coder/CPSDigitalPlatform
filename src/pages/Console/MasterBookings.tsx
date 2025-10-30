@@ -19,12 +19,13 @@ import {
   MapPin, // For Maps view
 } from 'lucide-react';
 import { MasterBooking, Worker, ConsoleProfile } from '../../types';
-import { supabaseBookingStore } from '../../stores/SupabaseBookingStore'; // Using the central store
+import { supabaseBookingStore } from '../../stores/SupabaseBookingStore';
+import { AuthService } from '../../services/auth.service';
 import {
-  setStorageItem,
-  getStorageItem,
-  STORAGE_KEYS,
-} from '../../lib/localStorage';
+  WorkerService,
+  TerritoryAssignmentService,
+  RouteManagerService,
+} from '../../services/database.service';
 import AssignRouteManager from '../../components/AssignRouteManager';
 import EmailTemplate from '../../components/EmailTemplate';
 import {
@@ -202,21 +203,11 @@ const MasterBookings: React.FC = () => {
       setFullTerritoryStructure(structure);
       console.log('Loaded territory structure:', structure);
 
-      const assignmentsFromStorage = getStorageItem(
-        STORAGE_KEYS.TERRITORY_ASSIGNMENTS,
-        {}
-      );
-      setTerritoryAssignments(assignmentsFromStorage);
-      const adminTitle = getStorageItem(STORAGE_KEYS.ADMIN, null);
-      let profileId: number | null = null;
-      if (adminTitle) {
-        const profiles: ConsoleProfile[] = getStorageItem(
-          STORAGE_KEYS.CONSOLE_PROFILES,
-          []
-        );
-        const currentProfile = profiles.find((p) => p.title === adminTitle);
-        profileId = currentProfile?.id ?? null;
-      }
+      const territoryAssignments = await TerritoryAssignmentService.getAll();
+      setTerritoryAssignments(territoryAssignments);
+
+      const session = await AuthService.getSession();
+      const profileId = session?.userType === 'console' ? (session.userId as number) : null;
       setCurrentConsoleProfileId(profileId);
       console.log(`Current Console Profile ID: ${profileId}`);
 
@@ -226,13 +217,21 @@ const MasterBookings: React.FC = () => {
         `Loaded ${bookingsFromStore.length} bookings (filtered by territory).`
       );
 
-      setWorkers(getStorageItem(STORAGE_KEYS.CONSOLE_WORKERS, []));
-      setAssignableManagers(getAssignableRouteManagers());
-      const currentMapAssignments = getStorageItem(
-        STORAGE_KEYS.MAP_ASSIGNMENTS,
-        {}
-      );
-      setAssignments(currentMapAssignments);
+      const workers = await WorkerService.getAll();
+      setWorkers(workers);
+
+      if (profileId) {
+        const rmProfiles = await RouteManagerService.getByConsoleProfileId(profileId);
+        const assignableRMs: RouteManager[] = [
+          { name: 'Unassigned', initials: '?' },
+          ...rmProfiles.map(rm => ({ name: rm.name, initials: rm.initials })),
+        ];
+        setAssignableManagers(assignableRMs);
+      } else {
+        setAssignableManagers(getAssignableRouteManagers());
+      }
+
+      setAssignments({});
 
       const processedStats = processBookingsForMapStats(bookingsFromStore);
       setTerritoryStats(processedStats);
@@ -510,7 +509,7 @@ const MasterBookings: React.FC = () => {
     setSelectedRoutes(newSelectedRoutes);
     setSelectedMaps(newSelectedMaps);
   };
-  const handleAssignManager = (manager: RouteManager) => {
+  const handleAssignManager = async (manager: RouteManager) => {
     /* ... */
     const newAssignments = { ...assignments };
     const today = new Date();
@@ -558,7 +557,6 @@ const MasterBookings: React.FC = () => {
         }
       }
     });
-    setStorageItem(STORAGE_KEYS.MAP_ASSIGNMENTS, newAssignments);
     setAssignments(newAssignments);
     setSelectedMaps(new Set());
     setSelectedRoutes(new Set());

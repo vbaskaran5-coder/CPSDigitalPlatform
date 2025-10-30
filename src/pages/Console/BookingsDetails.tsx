@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { supabaseBookingStore } from '../../stores/SupabaseBookingStore';
+import { AuthService } from '../../services/auth.service';
 import { MasterBooking } from '../../types';
 import { format } from 'date-fns';
 
@@ -60,11 +61,14 @@ const BookingsDetails: React.FC = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (bookingId) {
       const fullAddress =
         `${formData.houseNumber} ${formData.streetName}`.trim();
-      const adminUser = localStorage.getItem('admin') || 'Admin';
+
+      const session = await AuthService.getSession();
+      const adminUser = session?.username || 'Admin';
+
       const newNote =
         currentNote.trim() !== ''
           ? {

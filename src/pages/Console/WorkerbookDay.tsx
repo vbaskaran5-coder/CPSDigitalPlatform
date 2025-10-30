@@ -2,35 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import PayoutToday from './PayoutToday';
-import { getStorageItem, STORAGE_KEYS } from '../../lib/localStorage';
-
-interface Worker {
-  contractorId: string;
-  firstName: string;
-  lastName: string;
-  cellPhone: string;
-  status: string;
-  bookingStatus?: 'calendar';
-  bookedDate?: string;
-}
+import { WorkerService, AttendanceService } from '../../services/database.service';
+import { Worker } from '../../types';
 
 const WorkerbookDay: React.FC = () => {
   const { date } = useParams<{ date: string }>();
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [isFinalized, setIsFinalized] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (date) {
-      const allWorkers = getStorageItem(STORAGE_KEYS.CONSOLE_WORKERS, []);
-      const dayWorkers = allWorkers.filter(
-        (w: Worker) => w.bookedDate === date && w.bookingStatus === 'calendar'
-      );
-      setWorkers(dayWorkers);
+    const loadDayData = async () => {
+      if (!date) return;
 
-      const finalized = getStorageItem(`attendanceFinalized_${date}`, false);
-      setIsFinalized(finalized === 'true');
-    }
+      setLoading(true);
+      try {
+        const allWorkers = await WorkerService.getAll();
+        const dayWorkers = allWorkers.filter(
+          (w) => w.bookedDate === date && w.bookingStatus === 'calendar'
+        );
+        setWorkers(dayWorkers);
+
+        const finalized = await AttendanceService.isFinalized(date);
+        setIsFinalized(finalized);
+      } catch (error) {
+        console.error('Failed to load day data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDayData();
   }, [date]);
 
   if (!date) {

@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { format } from 'date-fns';
 import { getCurrentDate } from '../lib/date';
+import { AuthService } from '../services/auth.service';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+  const [contractor, setContractor] = useState<any>({});
   const isRootPath = location.pathname === '/';
 
-  const contractor = JSON.parse(localStorage.getItem('contractor') || '{}');
+  useEffect(() => {
+    const loadContractorInfo = async () => {
+      try {
+        const session = await AuthService.getSession();
+        if (session && session.userType === 'worker') {
+          setContractor({
+            firstName: session.profile.firstName || '',
+            lastName: session.profile.lastName || '',
+            number: session.userId || '',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load contractor info:', error);
+      }
+    };
+    loadContractorInfo();
+  }, []);
 
   return (
     <>
