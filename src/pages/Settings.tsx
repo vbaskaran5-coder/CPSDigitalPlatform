@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Save,
   RefreshCw,
@@ -8,23 +8,26 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { AppSettings } from '../types';
-import {
-  getStorageItem,
-  setStorageItem,
-  STORAGE_KEYS,
-} from '../lib/localStorage';
+import { AppStateService } from '../services/database.service';
 
 const Settings: React.FC = () => {
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    return getStorageItem('cps_settings', {
-      syncFrequency: 30,
-      notificationsEnabled: true,
-      darkMode: false,
-      defaultView: 'list',
-    });
+  const [settings, setSettings] = useState<AppSettings>({
+    syncFrequency: 30,
+    notificationsEnabled: true,
+    darkMode: false,
+    defaultView: 'list',
   });
-
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    AppStateService.get('cps_settings').then((savedSettings) => {
+      if (savedSettings) {
+        setSettings(savedSettings);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -41,9 +44,9 @@ const Settings: React.FC = () => {
     setSaved(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStorageItem('cps_settings', settings);
+    await AppStateService.set('cps_settings', settings);
     setSaved(true);
 
     setTimeout(() => {
@@ -51,18 +54,25 @@ const Settings: React.FC = () => {
     }, 3000);
   };
 
-  const clearAllData = () => {
+  const clearAllData = async () => {
     if (
       window.confirm(
-        'Are you sure you want to clear all local data? This will remove all jobs and settings.'
+        'Are you sure you want to clear all database settings? This action cannot be undone.'
       )
     ) {
-      localStorage.removeItem(STORAGE_KEYS.BOOKINGS);
-      localStorage.removeItem('cps_settings');
-      localStorage.removeItem('lastSynced');
+      await AppStateService.set('cps_settings', null);
+      await AppStateService.set('lastSynced', null);
       window.location.reload();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">

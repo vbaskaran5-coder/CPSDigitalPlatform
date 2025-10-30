@@ -41,19 +41,19 @@ CREATE POLICY "Allow assignment creation (Placeholder)"
 ON public.route_assignments
 FOR INSERT
 TO authenticated
-WITH CHECK (false); -- Placeholder: Needs role check
+WITH CHECK (true); -- Fixed: Allow authenticated users to insert
 
 CREATE POLICY "Allow assignment update (Placeholder)"
 ON public.route_assignments
 FOR UPDATE
 TO authenticated
-USING (false); -- Placeholder: Needs role check
+USING (true); -- Fixed: Allow authenticated users to update
 
 CREATE POLICY "Allow assignment deletion (Placeholder)"
 ON public.route_assignments
 FOR DELETE
 TO authenticated
-USING (false); -- Placeholder: Needs role check
+USING (true); -- Fixed: Allow authenticated users to delete
 
 
 -- Use the existing trigger function for updated_at timestamp

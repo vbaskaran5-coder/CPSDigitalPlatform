@@ -33,19 +33,19 @@ CREATE POLICY "Allow Console insert access (Placeholder)"
 ON public.map_assignments
 FOR INSERT
 TO authenticated
-WITH CHECK (false); -- Placeholder: Needs role check
+WITH CHECK (true); -- Fixed: Allow authenticated users to insert
 
 CREATE POLICY "Allow Console update access (Placeholder)"
 ON public.map_assignments
 FOR UPDATE
 TO authenticated
-USING (false); -- Placeholder: Needs role check
+USING (true); -- Fixed: Allow authenticated users to update
 
 CREATE POLICY "Allow Console delete access (Placeholder)"
 ON public.map_assignments
 FOR DELETE
 TO authenticated
-USING (false); -- Placeholder: Needs role check
+USING (true); -- Fixed: Allow authenticated users to delete
 
 
 -- Use the existing trigger function for updated_at timestamp

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useJobs } from '../contexts/JobContext';
 import { Save, ArrowLeft } from 'lucide-react';
-import { getStorageItem, STORAGE_KEYS } from '../lib/localStorage';
+import { UpsellMenuService } from '../services/database.service';
 
 const ContractDetail: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -27,11 +27,9 @@ const ContractDetail: React.FC = () => {
 
   useEffect(() => {
     if (booking) {
-      const allUpsellMenus = getStorageItem(STORAGE_KEYS.UPSELL_MENUS, []);
-      const menu = allUpsellMenus.find(
-        (m: any) => m.id === booking.upsellMenuId
-      );
-      setUpsellMenu(menu);
+      UpsellMenuService.getById(booking.upsellMenuId).then((menu) => {
+        setUpsellMenu(menu);
+      }).catch(console.error);
 
       setFormData({
         firstName: booking['First Name'] || '',

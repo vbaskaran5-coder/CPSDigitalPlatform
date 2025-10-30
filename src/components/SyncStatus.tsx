@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { useJobs } from '../contexts/JobContext';
-import { getStorageItem } from '../lib/localStorage';
+import { AppStateService } from '../services/database.service';
 
 const SyncStatus: React.FC = () => {
   const { syncJobs, loading, error } = useJobs();
   const [showStatus, setShowStatus] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
-  const [lastSynced, setLastSynced] = useState<string | null>(
-    getStorageItem('lastSynced', null)
-  );
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
+
+  useEffect(() => {
+    AppStateService.get('lastSynced').then((value) => setLastSynced(value));
+  }, []);
 
   useEffect(() => {
     if (showStatus) {

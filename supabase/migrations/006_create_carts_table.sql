@@ -32,13 +32,13 @@ CREATE POLICY "Allow updates (Placeholder)"
 ON public.carts
 FOR UPDATE
 TO authenticated
-USING (false); -- Placeholder
+USING (true); -- Fixed: Allow authenticated users to update
 
 CREATE POLICY "Allow inserts (Placeholder)"
 ON public.carts
 FOR INSERT
 TO authenticated
-WITH CHECK (false); -- Placeholder
+WITH CHECK (true); -- Fixed: Allow authenticated users to insert
 
 -- Use the existing trigger function for updated_at timestamp
 CREATE TRIGGER set_carts_timestamp

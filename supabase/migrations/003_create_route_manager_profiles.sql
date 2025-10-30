@@ -39,13 +39,13 @@ CREATE POLICY "Allow updates (Placeholder)"
 ON public.route_manager_profiles
 FOR UPDATE
 TO authenticated
-USING (false); -- Placeholder
+USING (true); -- Fixed: Allow authenticated users to update
 
 CREATE POLICY "Allow inserts (Placeholder)"
 ON public.route_manager_profiles
 FOR INSERT
 TO authenticated
-WITH CHECK (false); -- Placeholder
+WITH CHECK (true); -- Fixed: Allow authenticated users to insert
 
 -- Use the existing trigger function for updated_at timestamp
 -- (Assuming trigger_set_timestamp function was created in the previous migration)

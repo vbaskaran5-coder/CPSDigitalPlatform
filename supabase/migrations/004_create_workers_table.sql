@@ -70,13 +70,13 @@ CREATE POLICY "Allow updates (Placeholder)"
 ON public.workers
 FOR UPDATE
 TO authenticated
-USING (false); -- Placeholder
+USING (true); -- Fixed: Allow authenticated users to update
 
 CREATE POLICY "Allow inserts (Placeholder)"
 ON public.workers
 FOR INSERT
 TO authenticated
-WITH CHECK (false); -- Placeholder
+WITH CHECK (true); -- Fixed: Allow authenticated users to insert
 
 
 -- Add indexes for commonly queried columns
